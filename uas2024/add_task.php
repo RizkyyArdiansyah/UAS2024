@@ -1,212 +1,79 @@
-* {
-    margin: 0;
-    padding: 0;
-    font-family: Arial, Helvetica, sans-serif;
-}
+<!DOCTYPE html>
+<html lang="en">
 
-/* style peta */
-#peta {
-    height: 100vh;
-    width: 100%;
-    position: absolute;
-    z-index: 0;
-}
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-/* style widget */
-#alert {
-    position: absolute;
-    padding: 13px 17px 17px 17px;
-    border-radius: 10px;
-    background-color: rgba(255, 255, 255, 0.86);
-    box-shadow: 10px 10px rgba(28, 28, 28, 0.2);
-    top: 10px;
-    left: 10px;
-}
+    <!-- CDN leaflet -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
 
-#alert button {
-    font-size: 14px;
-    font-weight: 600;
-    cursor: pointer;
-    padding: 5px 10px;
-    border-radius: 5px;
-    color: rgba(255, 255, 255, 0.9);
-    background-color: rgb(0, 0, 0);
-    box-shadow: 5px 4px rgba(26, 217, 217, 0.65);
-}
+    <!-- CSS custom-an -->
+    <link rel="stylesheet" href="<?= base_url('assets/css/peta.css') ?>">
+    <title>GIS | J-Island - Satwa Langka</title>
+</head>
 
-#alert button:hover {
-    color: rgba(255, 255, 255, 0.8);
-    background-color: rgb(64, 64, 64);
-    box-shadow: none;
-    transform: translateY(2px);
-    transition: 50ms;
-}
+<body>
+    <!-- bagian warning yang dibuat jadi popup make js dibawah -->
+    <div id="warning">
+        <div id="popup">
+            <h3>! PERINGATAN !</h3>
+            <p>Website ini ditujukan untuk memberikan informasi mengenai jumlah populasi satwa langka yang ada di Indonesia. Sebagai pengunjung, mungkin Anda bertanya tentang tanggung jawab dan kewajiban kami terkait dengan informasi yang disediakan website ini. Kami dengan tegas menyatakan bahwa tidak bertanggung jawab atas tindakan yang dilakukan oleh oknum yang menggunakan informasi dari website ini untuk tujuan ilegal.</p>
+            <p>Perlu dicatat bahwa melindungi satwa langka adalah tanggung jawab bersama. Kami mengajak semua pengunjung untuk menjadi bagian dari upaya pelestarian dan perlindungan satwa langka dengan cara yang legal dan etis. Edukasi, konservasi habitat, dan dukungan terhadap upaya pelestarian merupakan langkah-langkah yang lebih baik dalam mendukung keberlangsungan satwa langka daripada melakukan praktik ilegal.</p>
+            <p>Dengan berpedoman pada <b>Pasal 21 ayat 2 Undang-Undang nomor 5 tahun 1990</b>. Kami secara tegas menolak serta mengutuk segala bentuk tindakan ilegal terhadap satwa langka.</p>
+            <p>Kami senang bisa menjadi sumber informasi yang berguna bagi Anda yang peduli terhadap satwa langka. Terima kasih atas kunjungan Anda.</p>
+            <button onclick="Mengerti()">Mengerti</button>
+        </div>
+    </div>
 
-#box-komentar {
-    position: absolute;
-    padding: 15px;
-    border-radius: 10px;
-    background-color: rgba(255, 255, 255, 0.86);
-    box-shadow: 10px 10px rgba(28, 28, 28, 0.2);
-    bottom: 10px;
-    right: 10px;
-}
+    <!-- bagian peta -->
+    <div id="map"></div>
 
-#box-komentar button {
-    font-size: 14px;
-    font-weight: 600;
-    cursor: pointer;
-    padding: 5px 10px;
-    border-radius: 5px;
-    color: rgba(255, 255, 255, 0.9);
-    background-color: rgb(0, 0, 0);
-    box-shadow: 5px 4px rgba(26, 217, 217, 0.65);
-}
+    <!-- JS leaflet -->
+    <script>
+        // nampilin peta
+        const peta = L.map('map').setView([-1.35, 119.45], 5);
+        L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            maxZoom: 18
+        }).addTo(peta);
+        
+        // ambil data dari database yang dikirim dari controller
+        var data = <?= json_encode($satwa) ?>
 
-#box-komentar button:hover {
-    color: rgba(255, 255, 255, 0.8);
-    background-color: rgb(64, 64, 64);
-    box-shadow: none;
-    transform: translateY(2px);
-    transition: 50ms;
-}
+        // nampilin semua data ke map dari database make looping
+        data.forEach(function(satwa) {
+            var marker = L.marker([satwa.lat, satwa.lon], {
+                icon: icon
+            }).addTo(peta).bindPopup(
+                '<img src="' + satwa.img + '" alt="" style="width:100%;height:200px;border-radius:10px;"><br>' +
+                'Hewan: <b>' + satwa.nama + '</b><br>' +
+                'Populasi: <b>' + satwa.populasi + '</b>' +
+                '<p>' + satwa.deskripsi + '</p>'
+            ); // nampilin bindpopup dari marker
+        });
 
-.Kategori {
-    position: absolute;
-    padding: 15px;
-    border-radius: 10px;
-    background-color: rgba(255, 255, 255, 0.86);
-    box-shadow: 10px 10px rgba(28, 28, 28, 0.2);
-    top: 10px;
-    right: 10px;
-}
+        // Fungsi untuk menutup popup warning
+        function Mengerti() {
+            var overlay = document.getElementById('warning');
+            overlay.style.display = 'none';
+        }
 
-.kategori-judul {
-    font-size: 18px;
-    font-weight: bold;
-    color: rgba(26, 217, 217, 0.85);
-}
 
-.divider {
-    margin: 12px 0 18px 0;
-    background-color: rgba(0, 0, 0);
-    height: 2px;
-}
+        // ! ABAIKAN SAJA KODE DIBAWAH !
 
-.kategori-input {
-    display: flex;
-    flex-direction: column;
-    gap: 12px;
-}
+        // Gw komentarin code dibawah soalnya cuman buat dapetin coordinate
+        // 
+        // var popup = L.popup();
+        // function getcoord(e) {
+        //     popup
+        //         .setLatLng(e.latlng)
+        //         .setContent(`<b>Coordinate</b><br><hr> <b>Lat</b>: ${e.latlng.lat}<br><b>Lon</b>: ${e.latlng.lng}`)
+        //         .openOn(peta);
+        // }
 
-.kategori-input label {
-    font-size: 14px;
-    font-weight: 600;
-    cursor: pointer;
-    color: rgba(23, 23, 23, 0.8);
-}
+        // peta.on('click', getcoord);
+    </script>
+</body>
 
-.kategori-input label:hover {
-    color: rgba(45, 147, 147, 0.6);
-}
-
-.kategori-input input[type="radio"] {
-    margin-right: 7px;
-}
-
-.kategori-input input[type="radio"]:hover {
-    margin-right: 10px;
-    transition: 50ms;
-}
-
-.kategori-input input[type="radio"]:checked+span {
-    color: rgba(26, 217, 217, 0.8);
-}
-
-/* style hidden box */
-#login {
-    position: absolute;
-    padding: 15px 20px;
-    border-radius: 10px;
-    background-color: rgba(255, 255, 255, 0.86);
-    box-shadow: 10px 10px rgba(28, 28, 28, 0.2);
-    top: 10px;
-    left: 10px;
-}
-
-#login form {
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
-}
-
-#login input[type="text"],
-#login input[type="password"] {
-    font-size: 14px;
-    padding: 5px;
-    border-radius: 5px;
-    border: 3px solid rgba(26, 217, 217, 0.65);
-}
-
-#login input[type="submit"] {
-    font-size: 14px;
-    font-weight: 600;
-    cursor: pointer;
-    padding: 5px 10px;
-    border-radius: 5px;
-    color: rgba(255, 255, 255, 0.9);
-    background-color: rgb(0, 0, 0);
-    box-shadow: 5px 4px rgba(26, 217, 217, 0.65);
-}
-
-#login input[type="submit"]:hover {
-    color: rgba(255, 255, 255, 0.8);
-    background-color: rgb(64, 64, 64);
-    box-shadow: none;
-    transform: translateY(2px);
-    transition: 50ms;
-}
-
-#komentar {
-    position: absolute;
-    padding: 15px 20px;
-    border-radius: 10px;
-    background-color: rgba(255, 255, 255, 0.86);
-    box-shadow: 10px 10px rgba(28, 28, 28, 0.2);
-    bottom: 10px;
-    right: 10px;
-}
-
-#komentar form {
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
-}
-
-#komentar #commenttext {
-    width: 300px;
-    height: 150px;
-    font-size: 14px;
-    padding: 5px;
-    border-radius: 5px;
-    border: 3px solid rgba(26, 217, 217, 0.65);
-}
-
-#komentar input[type="submit"] {
-    font-size: 14px;
-    font-weight: 600;
-    cursor: pointer;
-    padding: 5px 10px;
-    border-radius: 5px;
-    color: rgba(255, 255, 255, 0.9);
-    background-color: rgb(0, 0, 0);
-    box-shadow: 5px 4px rgba(26, 217, 217, 0.65);
-}
-
-#komentar input[type="submit"]:hover {
-    color: rgba(255, 255, 255, 0.8);
-    background-color: rgb(64, 64, 64);
-    box-shadow: none;
-    transform: translateY(2px);
-    transition: 50ms;
-}
+</html>
